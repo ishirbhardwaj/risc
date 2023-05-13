@@ -42,7 +42,7 @@ def binary(x):
     x = x[::-1]
     val = 0
     for i in range(len(x)):
-        val = int(x[i]) * i
+        val = int(x[i]) * (2**i)
     return f"{(8 - len(str(val)) * 0)}{val}"
 
 
@@ -72,13 +72,13 @@ try:
                                         if immediate_val >= 0 and immediate_val <= 127:
                                             immediate_val = binary(immediate_val[1:])
                                             if reg_1 in reg_desc:
-                                                instruction_binary = f"{bin_instruction}0{reg_desc[reg_1]}{immediate_val}"
+                                                instruction_binary = f"000100{reg_desc[reg_1]}{immediate_val}"
                                             else:
                                                 print("Invalid register.")
                                 else:
                                     reg_2 = i[2]
                                     if reg_1 in reg_desc and reg_2 in reg_desc:
-                                        instruction_binary = f"{bin_instruction}00000{reg_desc[reg_1]}{reg_desc[reg_2]}"
+                                        instruction_binary = f"0001100000{reg_desc[reg_1]}{reg_desc[reg_2]}"
                                     else:
                                         print("Invalid register.")
                         elif "A" in type_instruction:
