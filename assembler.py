@@ -64,24 +64,13 @@ try:
                         instruction_binary = ""
                         if instruction == "mov":
                             if len(i) == 3:
-                                reg_1 = i[1]
                                 if i[2][0] != "$":
-                                    immediate_val = i[2]
-                                    if immediate_val[1:].isdigit():
-                                        immediate_val = int(immediate_val[1:])
-                                        if immediate_val >= 0 and immediate_val <= 127:
-                                            immediate_val = binary(immediate_val[1:])
-                                            if reg_1 in reg_desc:
-                                                instruction_binary = f"000100{reg_desc[reg_1]}{immediate_val}"
-                                            else:
-                                                print("Invalid register.")
+                                    type_instruction = "B"
+                                    bin_instruction = "00010"
                                 else:
-                                    reg_2 = i[2]
-                                    if reg_1 in reg_desc and reg_2 in reg_desc:
-                                        instruction_binary = f"0001100000{reg_desc[reg_1]}{reg_desc[reg_2]}"
-                                    else:
-                                        print("Invalid register.")
-                        elif "A" in type_instruction:
+                                    type_instruction = "C"
+                                    bin_instruction = "00011"
+                        if "A" in type_instruction:
                             if len(i) == 4:
                                 reg_1 = i[1]
                                 reg_2 = i[2]
@@ -106,6 +95,10 @@ try:
                                             instruction_binary = f"{bin_instruction}0{reg_desc[reg_1]}{immediate_val}"
                                         else:
                                             print("Invalid register.")
+                                    else:
+                                        print("Immediate value out of range.")
+                                else:
+                                    print("Invalid immediate value.")
                         elif "C" in type_instruction:
                             if len(i) == 3:
                                 reg_1 = i[1]
