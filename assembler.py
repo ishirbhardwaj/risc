@@ -34,119 +34,242 @@ reg_desc = {
 }
 
 instructions = []
-variables = []
-labels = []
+final_binary = []
+errors = []
+variables = {}
+labels = {}
 var = False
 
 
+with open("input.txt", "r") as f:
+    d = f.read()
+    temp = ""
+    for i in range(len(d)):
+        temp += d[i]
+        if d[i] == ":":
+            temp += "\n"
+
+with open("input.txt", "w") as f:
+    f.write(temp)
+
+
 def binary(x):
-    x = str(x)[::-1]
-    val = 0
-    for i in range(len(x)):
-        val = int(x[i]) * (2**i)
-    return f"{(8 - len(str(val)) * 0)}{val}"
+    val = bin(x)[2:]
+    return f"{((7 - len(val)) * '0')}{val}"
 
 
 try:
-    with open("assembly.txt", "r") as f:
+    with open("input.txt", "r") as f:
         data = f.readlines()
         for i in data:
-            instructions.append(i.strip().split())
-
+            i = i.strip().split()
+            if len(i) > 0:
+                instructions.append(i)
+    for i in range(len(instructions)):
+        instruction = instructions[i][0]
+        if instruction[-1] == ":" and instruction[-2] != " ":
+            labels[instruction[:-1]] = binary(i + 1)
+    var_count = len(instructions)
+    line_count = 0
     if len(instructions) > 0:
-        if instructions[-1][0] == "hlt" and len(instructions[-1]) == 1:
+        if (
+            instructions[-1][0] == "hlt"
+            and len(instructions[-1]) == 1
+            and instructions.count(["hlt"]) == 1
+        ):
             for i in instructions:
-                if len(i) > 0:
-                    instruction = i[0]
-                    if instruction in isa_desc:
-                        var = True
-                        type_instruction = isa_desc[instruction]["type"]
-                        bin_instruction = isa_desc[instruction]["bin"]
-                        instruction_binary = ""
-                        if instruction == "mov":
-                            if len(i) == 3:
-                                if i[2][0] != "$":
-                                    type_instruction = "C"
-                                    bin_instruction = "00011"
-                                else:
-                                    type_instruction = "B"
-                                    bin_instruction = "00010"
-                        if "A" in type_instruction:
-                            if len(i) == 4:
-                                reg_1 = i[1]
-                                reg_2 = i[2]
-                                reg_3 = i[3]
-                                if (
-                                    reg_1 in reg_desc
-                                    and reg_2 in reg_desc
-                                    and reg_3 in reg_desc
-                                ):
-                                    instruction_binary = f"{bin_instruction}00{reg_desc[reg_1]}{reg_desc[reg_2]}{reg_desc[reg_3]}"
-                                else:
-                                    raise Exception("Invalid register.")
-                        elif "B" in type_instruction:
-                            if len(i) == 3:
-                                reg_1 = i[1]
-                                immediate_val = i[2]
-                                if immediate_val[1:].isdigit():
-                                    immediate_val = int(immediate_val[1:])
-                                    if immediate_val >= 0 and immediate_val <= 127:
-                                        immediate_val = binary(immediate_val)
-                                        if reg_1 in reg_desc:
-                                            instruction_binary = f"{bin_instruction}0{reg_desc[reg_1]}{immediate_val}"
-                                        else:
-                                            raise Exception("Invalid register.")
+                line_count += 1
+                instruction = i[0]
+                if instruction in isa_desc:
+                    var = True
+                    type_instruction = isa_desc[instruction]["type"]
+                    bin_instruction = isa_desc[instruction]["bin"]
+                    instruction_binary = ""
+                    if instruction == "mov":
+                        if len(i) == 3:
+                            if i[2][0] != "$":
+                                type_instruction = "C"
+                                bin_instruction = "00011"
+                                if i[2] == "FLAGS":
+                                    reg_desc["FLAGS"] = "111"
+                            else:
+                                type_instruction = "B"
+                                bin_instruction = "00010"
+                        else:
+                            errors.append(
+                                f"ERROR Line {line_count}: Invalid length of argument."
+                            )
+                            break
+                    if "A" in type_instruction:
+                        if len(i) == 4:
+                            reg_1 = i[1]
+                            reg_2 = i[2]
+                            reg_3 = i[3]
+                            if (
+                                reg_1 in reg_desc
+                                and reg_2 in reg_desc
+                                and reg_3 in reg_desc
+                            ):
+                                instruction_binary = f"{bin_instruction}00{reg_desc[reg_1]}{reg_desc[reg_2]}{reg_desc[reg_3]}"
+                            else:
+                                errors.append(
+                                    f"ERROR Line {line_count}: Invalid register."
+                                )
+                                break
+                        else:
+                            errors.append(
+                                f"ERROR Line {line_count}: Invalid length of argument."
+                            )
+                            break
+                    elif "B" in type_instruction:
+                        if len(i) == 3:
+                            reg_1 = i[1]
+                            immediate_val = i[2]
+                            if immediate_val[1:].isdigit():
+                                immediate_val = int(immediate_val[1:])
+                                if immediate_val >= 0 and immediate_val <= 127:
+                                    immediate_val = binary(immediate_val)
+                                    if reg_1 in reg_desc:
+                                        instruction_binary = f"{bin_instruction}0{reg_desc[reg_1]}{immediate_val}"
                                     else:
-                                        raise Exception("Immediate value out of range.")
+                                        errors.append(
+                                            f"ERROR Line {line_count}: Invalid register."
+                                        )
+                                        break
                                 else:
-                                    raise Exception("Invalid immediate value.")
-                        elif "C" in type_instruction:
-                            if len(i) == 3:
-                                reg_1 = i[1]
-                                reg_2 = i[2]
-                                if reg_1 in reg_desc and reg_2 in reg_desc:
+                                    errors.append(
+                                        f"ERROR Line {line_count}: Immediate value out of range."
+                                    )
+                                    break
+                            else:
+                                errors.append(
+                                    f"ERROR Line {line_count}: Invalid immediate value."
+                                )
+                                break
+                        else:
+                            errors.append(
+                                f"ERROR Line {line_count}: Invalid length of argument."
+                            )
+                            break
+                    elif "C" in type_instruction:
+                        if len(i) == 3:
+                            reg_1 = i[1]
+                            reg_2 = i[2]
+                            if reg_1 in reg_desc and reg_2 in reg_desc:
+                                if reg_1 != "FLAGS":
                                     instruction_binary = f"{bin_instruction}00000{reg_desc[reg_1]}{reg_desc[reg_2]}"
                                 else:
-                                    raise Exception("Invalid register.")
-                        elif "D" in type_instruction:
-                            if len(i) == 3:
-                                reg_1 = i[1]
-                                mem_address = i[2]
-                                if mem_address in variables:
-                                    if reg_1 in reg_desc:
-                                        instruction_binary = f"{bin_instruction}0{reg_desc[reg_1]}{mem_address}"
-                                    else:
-                                        raise Exception("Invalid register.")
-                                elif mem_address in labels:
-                                    raise Exception("Illegal use of label as variable")
-                                else:
-                                    raise Exception("Undefined variable.")
-                        elif "E" in type_instruction:
-                            if len(i) == 2:
-                                if mem_address in labels:
-                                    instruction_binary = (
-                                        f"{bin_instruction}0000{mem_address}"
+                                    errors.append(
+                                        f"ERROR Line {line_count}: Illegal use of FLAGS."
                                     )
-                                elif mem_address in variables:
-                                    raise Exception("Illegal use of variable as label.")
-                                else:
-                                    raise Exception("Undefined label.")
-                        elif "F" in type_instruction:
-                            if len(i) == 1:
-                                instruction_binary = f"{bin_instruction}00000000000"
-                        print(instruction_binary)
-                    elif instruction == "var":
-                        if not var:
-                            if len(i) == 2:
-                                variables.append(i[1])
+                                    break
+                            else:
+                                errors.append(
+                                    f"ERROR Line {line_count}: Invalid register."
+                                )
+                                break
                         else:
-                            raise Exception("Variable not declared in the beginning.")
-                    elif instruction[-1] == ":" and instruction[-2] != " ":
+                            errors.append(
+                                f"ERROR Line {line_count}: Invalid length of argument."
+                            )
+                            break
+                    elif "D" in type_instruction:
+                        if len(i) == 3:
+                            reg_1 = i[1]
+                            mem_address = i[2]
+                            if mem_address in variables:
+                                if reg_1 in reg_desc:
+                                    instruction_binary = f"{bin_instruction}0{reg_desc[reg_1]}{variables[mem_address]}"
+                                else:
+                                    errors.append(
+                                        f"ERROR Line {line_count}: Invalid register."
+                                    )
+                                    break
+                            elif mem_address in labels:
+                                errors.append(
+                                    f"ERROR Line {line_count}: Illegal use of label as variable"
+                                )
+                                break
+                            else:
+                                errors.append(
+                                    f"ERROR Line {line_count}: Undefined variable."
+                                )
+                                break
+                        else:
+                            errors.append(
+                                f"ERROR Line {line_count}: Invalid length of argument."
+                            )
+                            break
+                    elif "E" in type_instruction:
+                        if len(i) == 2:
+                            mem_address = i[1]
+                            if mem_address in labels:
+                                instruction_binary = (
+                                    f"{bin_instruction}0000{labels[mem_address]}"
+                                )
+                            elif mem_address in variables:
+                                errors.append(
+                                    f"ERROR Line {line_count}: Illegal use of variable as label."
+                                )
+                                break
+                            else:
+                                errors.append(
+                                    f"ERROR Line {line_count}: Undefined label."
+                                )
+                                break
+                        else:
+                            errors.append(
+                                f"ERROR Line {line_count}: Invalid length of argument."
+                            )
+                            break
+                    elif "F" in type_instruction:
                         if len(i) == 1:
-                            labels.append(instruction)
+                            instruction_binary = f"{bin_instruction}00000000000"
+                        else:
+                            errors.append(
+                                f"ERROR Line {line_count}: Invalid length of argument."
+                            )
+                            break
+                    final_binary.append(instruction_binary)
+                    # print(instruction_binary)
+                elif instruction == "var":
+                    if not var:
+                        if len(i) == 2:
+                            var_count += 1
+                            variables[i[1]] = binary(var_count)
+                        else:
+                            errors.append(
+                                f"ERROR Line {line_count}: Invalid length of argument."
+                            )
+                            break
                     else:
-                        raise Exception("Invalid statement.")
+                        errors.append(
+                            f"ERROR Line {line_count}: Variable not declared in the beginning."
+                        )
+                        break
+                elif instruction[-1] == ":" and instruction[-2] != " ":
+                    pass
+                else:
+                    errors.append(f"ERROR Line {line_count}: Invalid statement.")
+                    break
+                if "FLAGS" in reg_desc:
+                    reg_desc.pop("FLAGS")
         else:
-            raise Exception("hlt not being used as the last instruction.")
+            errors.append(
+                f"ERROR Line {line_count}: hlt not being used once as the last instruction."
+            )
 except:
-    raise Exception("General Syntax Error.")
+    errors.append(f"ERROR Line {line_count}: General Syntax Error.")
+
+with open("errors.txt", "w") as f:
+    for i in errors:
+        if len(i) != 0:
+            print(i)
+            f.write(i + "\n")
+
+if len(errors) == 0:
+    with open("output.txt", "w") as f:
+        for i in final_binary:
+            if len(i) != 0:
+                print(i)
+                f.write(i + "\n")
