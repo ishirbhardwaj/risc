@@ -1,6 +1,7 @@
 isa_desc = {
     "add": {"type": "A", "bin": "00000"},
     "sub": {"type": "A", "bin": "00001"},
+    "mov": {"type": "bogus", "bin": "bogus"},
     # "mov": {"type": "B", "bin": "00010"},
     # "mov": {"type": "C", "bin": "00011"},
     "ld": {"type": "D", "bin": "00100"},
@@ -39,7 +40,7 @@ var = False
 
 
 def binary(x):
-    x = x[::-1]
+    x = str(x)[::-1]
     val = 0
     for i in range(len(x)):
         val = int(x[i]) * (2**i)
@@ -65,11 +66,11 @@ try:
                         if instruction == "mov":
                             if len(i) == 3:
                                 if i[2][0] != "$":
-                                    type_instruction = "B"
-                                    bin_instruction = "00010"
-                                else:
                                     type_instruction = "C"
                                     bin_instruction = "00011"
+                                else:
+                                    type_instruction = "B"
+                                    bin_instruction = "00010"
                         if "A" in type_instruction:
                             if len(i) == 4:
                                 reg_1 = i[1]
@@ -82,7 +83,7 @@ try:
                                 ):
                                     instruction_binary = f"{bin_instruction}00{reg_desc[reg_1]}{reg_desc[reg_2]}{reg_desc[reg_3]}"
                                 else:
-                                    print("Invalid register.")
+                                    raise Exception("Invalid register.")
                         elif "B" in type_instruction:
                             if len(i) == 3:
                                 reg_1 = i[1]
@@ -90,15 +91,15 @@ try:
                                 if immediate_val[1:].isdigit():
                                     immediate_val = int(immediate_val[1:])
                                     if immediate_val >= 0 and immediate_val <= 127:
-                                        immediate_val = binary(immediate_val[1:])
+                                        immediate_val = binary(immediate_val)
                                         if reg_1 in reg_desc:
                                             instruction_binary = f"{bin_instruction}0{reg_desc[reg_1]}{immediate_val}"
                                         else:
-                                            print("Invalid register.")
+                                            raise Exception("Invalid register.")
                                     else:
-                                        print("Immediate value out of range.")
+                                        raise Exception("Immediate value out of range.")
                                 else:
-                                    print("Invalid immediate value.")
+                                    raise Exception("Invalid immediate value.")
                         elif "C" in type_instruction:
                             if len(i) == 3:
                                 reg_1 = i[1]
@@ -106,7 +107,7 @@ try:
                                 if reg_1 in reg_desc and reg_2 in reg_desc:
                                     instruction_binary = f"{bin_instruction}00000{reg_desc[reg_1]}{reg_desc[reg_2]}"
                                 else:
-                                    print("Invalid register.")
+                                    raise Exception("Invalid register.")
                         elif "D" in type_instruction:
                             if len(i) == 3:
                                 reg_1 = i[1]
@@ -115,11 +116,11 @@ try:
                                     if reg_1 in reg_desc:
                                         instruction_binary = f"{bin_instruction}0{reg_desc[reg_1]}{mem_address}"
                                     else:
-                                        print("Invalid register.")
+                                        raise Exception("Invalid register.")
                                 elif mem_address in labels:
-                                    print("Illegal use of label as variable")
+                                    raise Exception("Illegal use of label as variable")
                                 else:
-                                    print("Undefined variable.")
+                                    raise Exception("Undefined variable.")
                         elif "E" in type_instruction:
                             if len(i) == 2:
                                 if mem_address in labels:
@@ -127,24 +128,25 @@ try:
                                         f"{bin_instruction}0000{mem_address}"
                                     )
                                 elif mem_address in variables:
-                                    print("Illegal use of variable as label.")
+                                    raise Exception("Illegal use of variable as label.")
                                 else:
-                                    print("Undefined label.")
+                                    raise Exception("Undefined label.")
                         elif "F" in type_instruction:
                             if len(i) == 1:
                                 instruction_binary = f"{bin_instruction}00000000000"
+                        print(instruction_binary)
                     elif instruction == "var":
                         if not var:
                             if len(i) == 2:
                                 variables.append(i[1])
                         else:
-                            print("Variable not declared in the beginning.")
+                            raise Exception("Variable not declared in the beginning.")
                     elif instruction[-1] == ":" and instruction[-2] != " ":
                         if len(i) == 1:
                             labels.append(instruction)
                     else:
-                        print("Invalid statement.")
+                        raise Exception("Invalid statement.")
         else:
-            print("hlt not being used as the last instruction.")
+            raise Exception("hlt not being used as the last instruction.")
 except:
-    print("Error encountered.")
+    raise Exception("General Syntax Error.")
