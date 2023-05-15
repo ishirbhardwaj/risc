@@ -33,13 +33,16 @@ reg_desc = {
     # "FLAGS": "111",
 }
 
+new_line_count = 0
 instructions = []
 final_binary = []
 errors = []
 variables = {}
 labels = {}
 var = False
-
+var_count = 0
+line_count = 0
+label_count = 0
 
 with open("input.txt", "r") as f:
     d = f.read()
@@ -48,8 +51,9 @@ with open("input.txt", "r") as f:
         temp += d[i]
         if d[i] == ":":
             temp += "\n"
+            new_line_count += 1
 
-with open("input.txt", "w") as f:
+with open("temporary.txt", "w") as f:
     f.write(temp)
 
 
@@ -59,7 +63,7 @@ def binary(x):
 
 
 try:
-    with open("input.txt", "r") as f:
+    with open("temporary.txt", "r") as f:
         data = f.readlines()
         for i in data:
             i = i.strip().split()
@@ -68,20 +72,25 @@ try:
     for i in range(len(instructions)):
         instruction = instructions[i][0]
         if instruction[-1] == ":" and instruction[-2] != " ":
-            labels[instruction[:-1]] = binary(i + 1)
-    var_count = len(instructions)
-    line_count = 0
-    if len(instructions) > 0:
+            labels[instruction[:-1]] = binary(label_count)
+        elif instruction != "var":
+            label_count += 1
+    if len(instructions) > 0 and len(instructions) <= 127:
         if (
             instructions[-1][0] == "hlt"
             and len(instructions[-1]) == 1
             and instructions.count(["hlt"]) == 1
         ):
             for i in instructions:
-                line_count += 1
                 instruction = i[0]
                 if instruction in isa_desc:
+                    line_count += 1
                     var = True
+                    var_count = len(instructions) - len(variables) - new_line_count
+                    if line_count > 0:
+                        for j in variables:
+                            variables[j] = binary(var_count)
+                            var_count += 1
                     type_instruction = isa_desc[instruction]["type"]
                     bin_instruction = isa_desc[instruction]["bin"]
                     instruction_binary = ""
@@ -231,12 +240,10 @@ try:
                             )
                             break
                     final_binary.append(instruction_binary)
-                    # print(instruction_binary)
                 elif instruction == "var":
                     if not var:
                         if len(i) == 2:
-                            var_count += 1
-                            variables[i[1]] = binary(var_count)
+                            variables[i[1]] = 0
                         else:
                             errors.append(
                                 f"ERROR Line {line_count}: Invalid length of argument."
@@ -258,6 +265,8 @@ try:
             errors.append(
                 f"ERROR Line {line_count}: hlt not being used once as the last instruction."
             )
+    else:
+        errors.append(f"ERROR Line {line_count}: Invalid length of instructions.")
 except:
     errors.append(f"ERROR Line {line_count}: General Syntax Error.")
 
