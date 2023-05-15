@@ -73,9 +73,11 @@ try:
         instruction = instructions[i][0]
         if instruction[-1] == ":" and instruction[-2] != " ":
             labels[instruction[:-1]] = binary(label_count)
+            # if new_line_count == 0:
+            #     label_count += 1
         elif instruction != "var":
             label_count += 1
-    if len(instructions) > 0 and len(instructions) <= 127:
+    if len(instructions) > 0 and len(instructions) <= 128:
         if (
             instructions[-1][0] == "hlt"
             and len(instructions[-1]) == 1
@@ -273,12 +275,12 @@ except:
 with open("errors.txt", "w") as f:
     for i in errors:
         if len(i) != 0:
-            print(i)
+            # print(i)
             f.write(i + "\n")
 
-if len(errors) == 0:
-    with open("output.txt", "w") as f:
+with open("output.txt", "w") as f:
+    if len(errors) == 0:
         for i in final_binary:
             if len(i) != 0:
-                print(i)
+                # print(i)
                 f.write(i + "\n")
