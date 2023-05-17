@@ -44,17 +44,40 @@ var_count = 0
 line_count = 0
 label_count = 0
 
-with open("input.txt", "r") as f:
-    d = f.read()
-    temp = ""
-    for i in range(len(d)):
-        temp += d[i]
-        if d[i] == ":":
-            temp += "\n"
-            new_line_count += 1
+# with open("input.txt", "r") as f:
+#     d = f.read()
+#     temp = ""
+#     for i in range(len(d)):
+#         temp += d[i]
+#         if d[i] == ":":
+#             temp += "\n"
+#             new_line_count += 1
 
-with open("temporary.txt", "w") as f:
-    f.write(temp)
+temp = ""
+final_temp = ""
+
+while True:
+    try:
+        line = input().strip()
+        temp += line + "\n"
+    except EOFError:
+        break
+
+for i in range(len(temp)):
+    final_temp += temp[i]
+    if temp[i] == ":":
+        final_temp += "\n"
+        new_line_count += 1
+
+# with open("temporary.txt", "w") as f:
+#     f.write(final_temp)
+
+
+final_temp = final_temp.split("\n")
+for i in final_temp:
+    i = i.strip().split()
+    if len(i) > 0:
+        instructions.append(i)
 
 
 def binary(x):
@@ -63,12 +86,12 @@ def binary(x):
 
 
 try:
-    with open("temporary.txt", "r") as f:
-        data = f.readlines()
-        for i in data:
-            i = i.strip().split()
-            if len(i) > 0:
-                instructions.append(i)
+    # with open("temporary.txt", "r") as f:
+    #     data = f.readlines()
+    #     for i in data:
+    #         i = i.strip().split()
+    #         if len(i) > 0:
+    #             instructions.append(i)
     for i in range(len(instructions)):
         instruction = instructions[i][0]
         if instruction[-1] == ":" and instruction[-2] != " ":
@@ -272,15 +295,15 @@ try:
 except:
     errors.append(f"ERROR Line {line_count}: General Syntax Error.")
 
-with open("errors.txt", "w") as f:
-    for i in errors:
-        if len(i) != 0:
-            # print(i)
-            f.write(i + "\n")
+# with open("errors.txt", "w") as f:
+for i in errors:
+    if len(i) != 0:
+        print(i)
+        # f.write(i + "\n")
 
-with open("output.txt", "w") as f:
-    if len(errors) == 0:
-        for i in final_binary:
-            if len(i) != 0:
-                # print(i)
-                f.write(i + "\n")
+# with open("output.txt", "w") as f:
+if len(errors) == 0:
+    for i in final_binary:
+        if len(i) != 0:
+            print(i)
+            # f.write(i + "\n")
