@@ -12,7 +12,7 @@ isa_desc = {
     "ls": {"type": "B", "bin": "01001"},
     "xor": {"type": "A", "bin": "01010"},
     "or": {"type": "A", "bin": "01011"},
-    "and": {"type": "A", "bin": "01101"},
+    "and": {"type": "A", "bin": "01100"},
     "not": {"type": "C", "bin": "01101"},
     "cmp": {"type": "C", "bin": "01110"},
     "jmp": {"type": "E", "bin": "01111"},
@@ -60,6 +60,8 @@ while True:
     try:
         line = input().strip()
         temp += line + "\n"
+    # if len(line) == 0:
+    #     break
     except EOFError:
         break
 
