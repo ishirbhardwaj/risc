@@ -1,5 +1,5 @@
 # CO Group Project
-> Final project for CSE112 (Computer Organisation)
+> Final project for CSE112 (Computer Organisation), made by Akshit Gupta, Arhaan Bahadur, Ishir Bhardwaj, and Manit Kaushik.
 
 ## Overview
 
